@@ -5,16 +5,16 @@ MimeType=video/mp4;video/x-matroska;video/webm;
 Actions=gif_low;gif_medium;gif_high;
 
 [Desktop Action gif_low]
-Name=Convert to GIF (Low / Small)
-Exec=/home/mainuser/.local/bin/videotogif "%f" --low
+Name=Convert to GIF (Low Quality)
+Exec=bash -c 'videotogif "$1" --low && kdialog --passivepopup "GIF created" 5 || kdialog --passivepopup "Conversion failed" 5' dummy %f
 Icon=image-gif
 
 [Desktop Action gif_medium]
-Name=Convert to GIF (Medium / Discord)
-Exec=bash -c '/home/mainuser/.local/bin/videotogif "%f"'
+Name=Convert to GIF (Medium Quality)
+Exec=bash -c 'videotogif "$1" && kdialog --passivepopup "GIF created" 5 || kdialog --passivepopup "Conversion failed" 5' dummy %f
 Icon=image-gif
 
 [Desktop Action gif_high]
 Name=Convert to GIF (High Quality)
-Exec=bash -c '/home/mainuser/.local/bin/videotogif "%f" --high'
+Exec=bash -c 'videotogif "$1" --high && kdialog --passivepopup "GIF created" 5 || kdialog --passivepopup "Conversion failed" 5' dummy %f
 Icon=image-gif
