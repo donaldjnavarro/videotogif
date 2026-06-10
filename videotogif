@@ -3,98 +3,204 @@ set -eo pipefail
 
 export PATH="$HOME/.cargo/bin:$PATH"
 
-# Verify video decoding app is available
 command -v ffmpeg >/dev/null || {
     echo "ffmpeg not found" >&2
     exit 1
 }
 
-# Verify gif making app is available
 command -v gifski >/dev/null || {
     echo "gifski not found" >&2
     exit 1
 }
 
+fps=12
+scale=480
+quality=90
+mode="medium"
+
+toframes=false
+fromframes=false
+output=""
+quality_override=false
+
 input="$1"
 shift
 
 if [ -z "$input" ]; then
-  echo "Usage:"
-  echo "  videotogif input.mp4 [output.gif] [--low|--medium|--high]"
-  exit 1
+    echo "Usage:"
+    echo "  videotogif input.ext"
+    echo "  videotogif input.ext --toframes"
+    echo "  videotogif folder.frames --fromframes"
+    exit 1
 fi
 
-if [ ! -f "$input" ]; then
-  echo "Error: file not found: $input"
-  exit 1
-fi
-
-fps=12
-scale=480
-quality=90
-
-mode="medium"
-output=""
-
-# parse arguments safely
 for arg in "$@"; do
-  case "$arg" in
-    --low)
-      fps=10
-      scale=360
-      quality=80
-      mode="low"
-      ;;
-    --medium)
-      fps=12
-      scale=480
-      quality=90
-      mode="medium"
-      ;;
-    --high)
-      fps=15
-      scale=640
-      quality=95
-      mode="high"
-      ;;
-    *)
-      # treat as output filename
-      output="$arg"
-      ;;
-  esac
+    case "$arg" in
+        --toframes)
+            toframes=true
+            ;;
+        --fromframes)
+            fromframes=true
+            ;;
+        --low)
+            fps=10
+            scale=360
+            quality=80
+            mode="low"
+            quality_override=true
+            ;;
+        --medium)
+            fps=12
+            scale=480
+            quality=90
+            mode="medium"
+            quality_override=true
+            ;;
+        --high)
+            fps=15
+            scale=640
+            quality=95
+            mode="high"
+            quality_override=true
+            ;;
+        *)
+            output="$arg"
+            ;;
+    esac
 done
 
-# auto output naming
-if [ -z "$output" ]; then
-  base="${input%.*}"
-
-  case "$mode" in
-    low)
-      output="${base}_low.gif"
-      ;;
-    high)
-      output="${base}_high.gif"
-      ;;
-    *)
-      output="${base}.gif"
-      ;;
-  esac
+if $fromframes && $quality_override; then
+    echo "Quality presets are not allowed with --fromframes"
+    echo "Frame timing and quality are loaded from .videotogif.conf within the frames folder"
+    exit 1
 fi
 
-# avoid overwriting existing files
-if [ -e "$output" ]; then
-  base="${output%.gif}"
-  n=1
-
-  while [ -e "${base}_${n}.gif" ]; do
-    n=$((n + 1))
-  done
-
-  output="${base}_${n}.gif"
+if $toframes && $fromframes; then
+    echo "Cannot use --toframes and --fromframes together"
+    exit 1
 fi
 
-ffmpeg -i "$input" \
-  -vf "fps=$fps,scale=$scale:-1:flags=lanczos,format=yuv420p" \
-  -f yuv4mpegpipe - | \
-gifski -o "$output" --fps "$fps" --quality "$quality" -
+next_available_gif() {
+    local file="$1"
 
+    if [ ! -e "$file" ]; then
+        echo "$file"
+        return
+    fi
+
+    local base="${file%.gif}"
+    local n=1
+
+    while [ -e "${base}_${n}.gif" ]; do
+        n=$((n + 1))
+    done
+
+    echo "${base}_${n}.gif"
+}
+
+video_to_frames() {
+    [ -f "$input" ] || {
+        echo "File not found: $input"
+        exit 1
+    }
+
+    local base="${input%.*}"
+    local frames_dir="${base}.frames"
+
+    if [ -e "$frames_dir" ]; then
+      echo "Frames directory already exists: $frames_dir"
+      exit 1
+    fi
+
+    mkdir -p "$frames_dir"
+
+    cat > "$frames_dir/.videotogif.conf" <<EOF
+fps=$fps
+scale=$scale
+quality=$quality
+mode=$mode
+EOF
+
+    ffmpeg -i "$input" \
+        -vf "fps=$fps,scale=$scale:-1:flags=lanczos" \
+        "$frames_dir/frame_%05d.png"
+}
+
+frames_to_gif() {
+    [ -d "$input" ] || {
+        echo "Directory not found: $input"
+        exit 1
+    }
+
+    conf="$input/.videotogif.conf"
+
+    if [ -f "$conf" ] && ! $quality_override; then
+        # shellcheck disable=SC1090
+        source "$conf"
+    fi
+
+    if [ -z "$output" ]; then
+        base="${input%.frames}"
+
+        case "$mode" in
+            low)
+                output="${base}_low.gif"
+                ;;
+            high)
+                output="${base}_high.gif"
+                ;;
+            *)
+                output="${base}.gif"
+                ;;
+        esac
+    fi
+
+    output="$(next_available_gif "$output")"
+
+    gifski \
+        -o "$output" \
+        --fps "$fps" \
+        --quality "$quality" \
+        "$input"/frame_*.png
+}
+
+video_to_gif() {
+    [ -f "$input" ] || {
+        echo "File not found: $input"
+        exit 1
+    }
+
+    if [ -z "$output" ]; then
+        base="${input%.*}"
+
+        case "$mode" in
+            low)
+                output="${base}_low.gif"
+                ;;
+            high)
+                output="${base}_high.gif"
+                ;;
+            *)
+                output="${base}.gif"
+                ;;
+        esac
+    fi
+
+    output="$(next_available_gif "$output")"
+
+    ffmpeg -i "$input" \
+        -vf "fps=$fps,scale=$scale:-1:flags=lanczos,format=yuv420p" \
+        -f yuv4mpegpipe - | \
+    gifski -o "$output" \
+        --fps "$fps" \
+        --quality "$quality" \
+        -
+}
+
+if $toframes; then
+    video_to_frames
+elif $fromframes; then
+    frames_to_gif
+else
+    video_to_gif
+fi
