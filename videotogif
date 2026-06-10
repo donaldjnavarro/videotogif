@@ -81,6 +81,18 @@ if [ -z "$output" ]; then
   esac
 fi
 
+# avoid overwriting existing files
+if [ -e "$output" ]; then
+  base="${output%.gif}"
+  n=1
+
+  while [ -e "${base}_${n}.gif" ]; do
+    n=$((n + 1))
+  done
+
+  output="${base}_${n}.gif"
+fi
+
 ffmpeg -i "$input" \
   -vf "fps=$fps,scale=$scale:-1:flags=lanczos,format=yuv420p" \
   -f yuv4mpegpipe - | \
