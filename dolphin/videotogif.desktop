@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Service
 ServiceTypes=KonqPopupMenu/Plugin
-MimeType=video/mp4;video/x-matroska;video/webm;
+MimeType=video/*;
 Actions=gif_low;gif_medium;gif_high;
 
 [Desktop Action gif_low]
