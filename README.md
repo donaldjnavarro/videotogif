@@ -40,9 +40,9 @@ which videotogif
 ## Usage
 
 ```bash
-videotogif input.mp4
-videotogif input.mp4 --low
-videotogif input.mp4 --high
+videotogif input.ext
+videotogif input.ext --low
+videotogif input.ext --high
 ```
 
 Outputs:
@@ -54,6 +54,8 @@ video_high.gif
 ```
 
 in the same directory as the source video.
+
+Works with any video format FFmpeg can decode.
 
 ## Dolphin Integration (KDE)
 
@@ -76,6 +78,8 @@ ln -sf ~/code/videotogif/dolphin/videotogif.desktop \
       ~/.local/share/kio/servicemenus/videotogif.desktop
 ```
 
+The Dolphin integration adds right-click actions and displays KDE success/failure notifications after conversion.
+
 After changes:
 
 ```bash
@@ -93,38 +97,36 @@ If Dolphin appears to do nothing:
 3. Verify `gifski` is on PATH.
 4. Remember: this already broke once because Dolphin had a different PATH than the terminal.
 
+## Archaeology -- notes from before
 
-# Archaeology -- notes from before
+Below are notes from the original commands used before packaging everything into the script.
 
-Below are notes for the bash commands we initially were using before packaging the script above.
-
-## Option A: Fast and easy -- all in one step
+### Option A: Fast and easy -- all in one step
 
 Pipes the frames directly from ffmpeg into gifski so they never get written to disk.
 
-```
+```bash
 ffmpeg -i "input.mp4" \
   -vf "fps=12,scale=480:-1:flags=lanczos" \
   -f yuv4mpegpipe - | gifski -o output.gif -
 ```
 
-## Option B: Slow and careful -- 2 steps
+### Option B: Slow and careful -- 2 steps
 
-Saves the frames first, and then makes the GIF out of the frames. This approach lets us see each individual frame -- easier to debug if ffmpeg creates bad frames. Also we get a stack of screenshots as a bonus.
+Saves the frames first, then builds the GIF from those frames. Useful for debugging.
 
-### B1: Make PNG frames out of MP4 source
+#### B1: Make PNG frames
 
-```
- mkdir frames
+```bash
+mkdir frames
 
 ffmpeg -i "input.mp4" \
   -vf "fps=12,scale=480:-1:flags=lanczos" \
   frames/frame_%05d.png
 ```
 
-### B2: Make GIF out of PNG frames
+#### B2: Make GIF from PNG frames
 
-```
+```bash
 gifski -o output.gif --fps 12 --quality 90 frames/frame_*.png
-gifski created /home/mainuser/Videos/output.gif
 ```
