@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=image/png;
+Actions=frames_to_gif;
+
+[Desktop Action frames_to_gif]
+Name=Create GIF From Frames
+Exec=bash -c 'dir="$(dirname "$1")"; videotogif "$dir" --fromframes && kdialog --passivepopup "✓ Successfully created GIF" 5 || kdialog --passivepopup "✗ Failed to convert frames to GIF" 5' dummy %f
+Icon=image-gif
