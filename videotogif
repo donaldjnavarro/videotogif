@@ -16,10 +16,11 @@ command -v gifski >/dev/null || {
 }
 
 input="$1"
+shift
 
 if [ -z "$input" ]; then
   echo "Usage:"
-  echo "  mp4togif input.mp4 [output.gif] [--low|--medium|--high]"
+  echo "  videotogif input.mp4 [output.gif] [--low|--medium|--high]"
   exit 1
 fi
 
@@ -55,9 +56,6 @@ for arg in "$@"; do
       scale=640
       quality=95
       mode="high"
-      ;;
-    *.mp4)
-      # ignore input file
       ;;
     *)
       # treat as output filename
