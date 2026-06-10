@@ -2,19 +2,34 @@
 Type=Service
 ServiceTypes=KonqPopupMenu/Plugin
 MimeType=video/*;
-Actions=gif_low;gif_medium;gif_high;
+Actions=gif_low;gif_medium;gif_high;video_toframes_low;video_toframes_medium;video_toframes_high;
 
 [Desktop Action gif_low]
 Name=Convert to GIF (Low Quality)
-Exec=bash -c 'videotogif "$1" --low && kdialog --passivepopup "GIF created" 5 || kdialog --passivepopup "Conversion failed" 5' dummy %f
+Exec=bash -c 'videotogif "$1" --low && kdialog --passivepopup "✓ Successfully converted video to low quality GIF" 5 || kdialog --passivepopup "✗ Failed to convert video to low quality GIF" 5' dummy %f
 Icon=image-gif
 
 [Desktop Action gif_medium]
 Name=Convert to GIF (Medium Quality)
-Exec=bash -c 'videotogif "$1" && kdialog --passivepopup "GIF created" 5 || kdialog --passivepopup "Conversion failed" 5' dummy %f
+Exec=bash -c 'videotogif "$1" && kdialog --passivepopup "✓ Successfully converted video to medium quality GIF" 5 || kdialog --passivepopup "✗ Failed to convert video to medium quality GIF" 5' dummy %f
 Icon=image-gif
 
 [Desktop Action gif_high]
 Name=Convert to GIF (High Quality)
-Exec=bash -c 'videotogif "$1" --high && kdialog --passivepopup "GIF created" 5 || kdialog --passivepopup "Conversion failed" 5' dummy %f
+Exec=bash -c 'videotogif "$1" --high && kdialog --passivepopup "✓ Successfully converted video to high quality GIF" 5 || kdialog --passivepopup "✗ Failed to convert video to high quality GIF" 5' dummy %f
+Icon=image-gif
+
+[Desktop Action video_toframes_low]
+Name=Convert to PNG frames (Low Quality)
+Exec=bash -c 'videotogif "$1" --low --toframes && kdialog --passivepopup "✓ Successfully created PNG frames" 5 || kdialog --passivepopup "✗ Failed to convert to frames" 5' dummy %f
+Icon=image-gif
+
+[Desktop Action video_toframes_medium]
+Name=Convert to PNG frames (Medium Quality)
+Exec=bash -c 'videotogif "$1" --medium --toframes && kdialog --passivepopup "✓ Successfully created PNG frames" 5 || kdialog --passivepopup "✗ Failed to convert to frames" 5' dummy %f
+Icon=image-gif
+
+[Desktop Action video_toframes_high]
+Name=Convert to PNG frames (High Quality)
+Exec=bash -c 'videotogif "$1" --high --toframes && kdialog --passivepopup "✓ Successfully created PNG frames" 5 || kdialog --passivepopup "✗ Failed to convert to frames" 5' dummy %f
 Icon=image-gif
