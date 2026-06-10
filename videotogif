@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -e
+
+export PATH="$HOME/.cargo/bin:$PATH"
+
+# Verify video decoding app is available
+command -v ffmpeg >/dev/null || {
+    echo "ffmpeg not found" >&2
+    exit 1
+}
+
+# Verify gif making app is available
+command -v gifski >/dev/null || {
+    echo "gifski not found" >&2
+    exit 1
+}
+
+input="$1"
+
+if [ -z "$input" ]; then
+  echo "Usage:"
+  echo "  mp4togif input.mp4 [output.gif] [--low|--medium|--high]"
+  exit 1
+fi
+
+if [ ! -f "$input" ]; then
+  echo "Error: file not found: $input"
+  exit 1
+fi
+
+fps=12
+scale=480
+quality=90
+
+mode="medium"
+output=""
+
+# parse arguments safely
+for arg in "$@"; do
+  case "$arg" in
+    --low)
+      fps=10
+      scale=360
+      quality=80
+      mode="low"
+      ;;
+    --medium)
+      fps=12
+      scale=480
+      quality=90
+      mode="medium"
+      ;;
+    --high)
+      fps=15
+      scale=640
+      quality=95
+      mode="high"
+      ;;
+    *.mp4)
+      # ignore input file
+      ;;
+    *)
+      # treat as output filename
+      output="$arg"
+      ;;
+  esac
+done
+
+# auto output naming
+if [ -z "$output" ]; then
+  base="${input%.*}"
+
+  case "$mode" in
+    low)
+      output="${base}_low.gif"
+      ;;
+    high)
+      output="${base}_high.gif"
+      ;;
+    *)
+      output="${base}.gif"
+      ;;
+  esac
+fi
+
+ffmpeg -i "$input" \
+  -vf "fps=$fps,scale=$scale:-1:flags=lanczos" \
+  -f yuv4mpegpipe - | \
+gifski -o "$output" --fps "$fps" --quality "$quality" -
+
