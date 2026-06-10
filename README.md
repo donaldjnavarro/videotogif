@@ -53,3 +53,10 @@ OR
 ```
 mp4togif inputfile.mp4 --low
 ```
+
+# Other notes
+
+In debian KDE, to add actions to the Dolphin rightclick menu, create a link to the dolphin file in the following folder and restart Dolphin
+```
+~/.local/share/kio/servicemenus/
+```

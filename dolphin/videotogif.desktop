@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=video/mp4;video/x-matroska;video/webm;
+Actions=gif_low;gif_medium;gif_high;
+
+[Desktop Action gif_low]
+Name=Convert to GIF (Low / Small)
+Exec=/home/mainuser/.local/bin/videotogif "%f" --low
+Icon=image-gif
+
+[Desktop Action gif_medium]
+Name=Convert to GIF (Medium / Discord)
+Exec=bash -c '/home/mainuser/.local/bin/videotogif "%f"'
+Icon=image-gif
+
+[Desktop Action gif_high]
+Name=Convert to GIF (High Quality)
+Exec=bash -c '/home/mainuser/.local/bin/videotogif "%f" --high'
+Icon=image-gif
